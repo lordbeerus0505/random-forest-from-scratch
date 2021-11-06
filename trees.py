@@ -33,14 +33,37 @@ def calculateGiniIndex(train_data):
     gini_index = 1 - (pos_count/total)**2 - (neg_count/total)**2
     return gini_index
 
+def calculateGiniGain(attribute, train_data):
+    # since all binary only 2 possibilities
+    positive_data = train_data.loc[train_data[attribute]==1]
+    negative_data = train_data.loc[train_data[attribute]==0]
+    pos_count = len(positive_data)
+    neg_count = len(negative_data)
+    if pos_count == 0 or neg_count == 0:
+        return 0
+    total = pos_count + neg_count
+    return pos_count/total * calculateGiniIndex(positive_data) + neg_count/total * calculateGiniIndex(negative_data)
+
 
 def bestAttribute(train_data):
-    attributes = train_data.columns
-    import pdb; pdb.set_trace()
+    attributes = train_data.columns[:-1]
+    
     # find entropy and gain as per gini index for each attribute in attribute
-    calculateGiniIndex(train_data)
+    giniIndex = calculateGiniIndex(train_data)
+    minReduction, bestAttr = 10000, ''
     for attr in attributes:
-        calculateGiniGain
+        # if attr == 'pref_o_intelligence':
+        #     import pdb; pdb.set_trace()
+        loss = calculateGiniGain(attr, train_data)
+        # print('Attribute: %s Loss: %s'%(attr, loss))
+        
+        if minReduction > loss:
+            bestAttr = attr
+            minReduction = loss
+    # import pdb; pdb.set_trace()
+    # no need to subtract, the min here is the best there. 
+    # If multiple share min, first one is used
+    return bestAttr
 def buildTree(train_data):
     # recursively constructing the tree
     # import pdb; pdb.set_trace()
@@ -59,10 +82,20 @@ def buildTree(train_data):
 
     attr = bestAttribute(train_data)
     # now drop this attribute from train_data for recursive steps
+    positive_data = train_data.loc[train_data[attr]==1]
+    negative_data = train_data.loc[train_data[attr]==0]
+    positive_data = positive_data.drop(attr, axis = 1)
+    negative_data = negative_data.drop(attr, axis = 1)
+    tree['+'] = buildTree(positive_data)
+    tree['-'] = buildTree(negative_data)
+    print(tree)
+    return tree
+    
     
 def decisionTree(train_data, test_data):
     # first build the tree, store it and then use it for testing
     decision_tree = buildTree(train_data)
+
 def treeMain(trainSetFile, testSetFile, operation):
     train_data = pd.read_csv(trainSetFile)
     test_data = pd.read_csv(testSetFile)
