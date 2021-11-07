@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import sys
 import copy
+import pprint
 
 def findDistribution(train_data):
     pos_count, neg_count = 0,0
@@ -64,21 +65,27 @@ def bestAttribute(train_data):
     # no need to subtract, the min here is the best there. 
     # If multiple share min, first one is used
     return bestAttr
-def buildTree(train_data):
+
+def buildTree(train_data, max_depth, depth):
     # recursively constructing the tree
     # import pdb; pdb.set_trace()
     tree = {}
+    if depth == max_depth:
+        return findMajority(train_data)
+
     if len(train_data) == 0:
-        return {}
-    if len(train_data.columns) == 2:
-        # only decision and one other attribute is left, return majority
-        return {findMajority(train_data)}
+        # NOTE: need to handle for when no data there, return majority or something
+        return '+'
+    if len(train_data.columns) == 1:
+        # only decision and one other attribute is left, if conflict return majority
+        # import pdb; pdb.set_trace() 
+        return findMajority(train_data)
     # if pure, no point calculating split up - find positive and negative first
     positive, negative = findDistribution(train_data)
     if positive == 0:
-        return {'-'}
+        return '-'
     elif negative == 0:
-        return {'+'}
+        return '+'
 
     attr = bestAttribute(train_data)
     # now drop this attribute from train_data for recursive steps
@@ -86,21 +93,65 @@ def buildTree(train_data):
     negative_data = train_data.loc[train_data[attr]==0]
     positive_data = positive_data.drop(attr, axis = 1)
     negative_data = negative_data.drop(attr, axis = 1)
-    tree['+'] = buildTree(positive_data)
-    tree['-'] = buildTree(negative_data)
-    print(tree)
+    tree[attr] = {1: buildTree(positive_data, max_depth, depth+1), 0: buildTree(negative_data, max_depth, depth+1)}
+    # print(tree)
+    # import pdb; pdb.set_trace()
     return tree
+
+def calculateAccuracy(predicted_values, actual_values):
+    predicted_values = np.where(predicted_values == '+',1,0)
+    diff = np.abs(np.subtract(predicted_values, actual_values))
+    # import pdb; pdb.set_trace()
+    return 1 - np.sum(diff)/len(diff)
     
-    
-def decisionTree(train_data, test_data):
+def recursiveParse(decision_tree, data_frame):
+    # import pdb; pdb.set_trace()
+    if type(decision_tree) == type(""):
+        return decision_tree
+    key = [*decision_tree]
+    values = decision_tree[key[0]]
+    for v in values:
+        if data_frame[1][key[0]] == v:
+            return recursiveParse(decision_tree[key[0]][v], data_frame)
+
+def predict(data_frame, decision_tree):
+    result = []
+    for data in data_frame.iterrows():
+        key = [*decision_tree]
+        values = decision_tree[key[0]]
+        
+        for v in values:
+            if data[1][key[0]] == v:
+                result.append(recursiveParse(decision_tree.copy()[key[0]][v], data))
+    # print(result)
+    return np.array(result)
+
+def decisionTree(train_data, test_data, max_depth = 8):
     # first build the tree, store it and then use it for testing
-    decision_tree = buildTree(train_data)
+    # print(train_data)
+    # new_train_data = train_data.copy()
+    decision_tree = buildTree(train_data.copy(), max_depth, 0)
+    pprint.pprint(decision_tree)
+    # time to predict the outcome
+    # predict(test_data)
+    results = predict(test_data, decision_tree)
+
+    # change to test data!
+    print(calculateAccuracy(results, np.array(test_data['decision'])))
+
 
 def treeMain(trainSetFile, testSetFile, operation):
     train_data = pd.read_csv(trainSetFile)
+    ###################
+    # import pdb; pdb.set_trace()
+    train_data = train_data.sample(frac= 1, random_state = 18)
+    train_data = train_data.head(100)
+    train_data = train_data[['gender', 'importance_same_religion', 'samerace', 'importance_same_race', 'decision']]
+    ########################
+   
     test_data = pd.read_csv(testSetFile)
     if operation == str(1):
-        decisionTree(train_data, test_data)
+        decisionTree(train_data, test_data, max_depth = 20)
     elif operation == str(2):
         baggedTree(train_data, test_data)
     else:
