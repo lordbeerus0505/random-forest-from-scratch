@@ -73,9 +73,9 @@ def buildTree(train_data, max_depth, depth):
     if depth == max_depth:
         return findMajority(train_data)
 
-    if len(train_data) == 0:
-        # NOTE: need to handle for when no data there, return majority or something
-        return '+'
+    if len(train_data) < 50:
+        # NOTE: need to handle for when less data there, return majority or something
+        return findMajority(train_data)
     if len(train_data.columns) == 1:
         # only decision and one other attribute is left, if conflict return majority
         # import pdb; pdb.set_trace() 
@@ -94,18 +94,14 @@ def buildTree(train_data, max_depth, depth):
     positive_data = positive_data.drop(attr, axis = 1)
     negative_data = negative_data.drop(attr, axis = 1)
     tree[attr] = {1: buildTree(positive_data, max_depth, depth+1), 0: buildTree(negative_data, max_depth, depth+1)}
-    # print(tree)
-    # import pdb; pdb.set_trace()
     return tree
 
 def calculateAccuracy(predicted_values, actual_values):
     predicted_values = np.where(predicted_values == '+',1,0)
     diff = np.abs(np.subtract(predicted_values, actual_values))
-    # import pdb; pdb.set_trace()
     return 1 - np.sum(diff)/len(diff)
     
 def recursiveParse(decision_tree, data_frame):
-    # import pdb; pdb.set_trace()
     if type(decision_tree) == type(""):
         return decision_tree
     key = [*decision_tree]
@@ -144,14 +140,14 @@ def treeMain(trainSetFile, testSetFile, operation):
     train_data = pd.read_csv(trainSetFile)
     ###################
     # import pdb; pdb.set_trace()
-    train_data = train_data.sample(frac= 1, random_state = 18)
-    train_data = train_data.head(100)
-    train_data = train_data[['gender', 'importance_same_religion', 'samerace', 'importance_same_race', 'decision']]
+    # train_data = train_data.sample(frac= 1, random_state = 18)
+    # train_data = train_data.head(100)
+    # train_data = train_data[['gender', 'importance_same_religion', 'samerace', 'importance_same_race', 'decision']]
     ########################
    
     test_data = pd.read_csv(testSetFile)
     if operation == str(1):
-        decisionTree(train_data, test_data, max_depth = 20)
+        decisionTree(train_data, test_data, max_depth = 8)
     elif operation == str(2):
         baggedTree(train_data, test_data)
     else:
