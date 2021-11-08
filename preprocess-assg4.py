@@ -135,6 +135,7 @@ def discretize(data_frame, toFile):
             data_frame[col] = pd.cut(data_frame[col], bins, labels = [0,1], 
             include_lowest = True, retbins = False)
 
+    data_frame.to_csv('dating.csv', index=False, mode='w')
     test_data = data_frame.sample(frac=0.2, random_state = 47)
     train_data = data_frame.drop(test_data.index)
     train_data.to_csv('trainingSet.csv', index = False, mode = 'w')
