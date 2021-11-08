@@ -194,7 +194,7 @@ def decisionTree(train_data, test_data, max_depth = 8):
     results_train = predict(train_data, decision_tree)
     results_train = np.where(results_train == '+', 1, 0)
     results_test = predict(test_data, decision_tree)
-    results_test = np.where(results_train == '+', 1, 0)
+    results_test = np.where(results_test == '+', 1, 0)
 
     # change to test data!
     # import pdb; pdb.set_trace()
