@@ -19,11 +19,11 @@ def encoder(pd_series):
 
 def read_dataset(fromFile, toFile):
 
-    number_of_quotes = 0
     data = pd.read_csv(fromFile)
-    data = data.drop(columns=['race', 'race_o', 'field'])
     # Top 6500 elements
     data = data.head(6500)
+    data = data.drop(columns=['race', 'race_o', 'field'])
+    
 
     """ 
     Use label encoding to convert the categorical values in columns gender, race, race_o and
@@ -84,15 +84,6 @@ def read_dataset(fromFile, toFile):
         data[importance[i]] = data[importance[i]]/sum_importance
         data[partner_metrics[i]] = data[partner_metrics[i]]/sum_partner_metrics
 
-    sum_importance_arr = []
-    for i in importance:
-        sum_importance_arr.append(data[i].sum())
-    sum_partner_metrics_arr = []
-    for i in partner_metrics:
-        sum_partner_metrics_arr.append(data[i].sum())
-
-    size = len(data)
-
     discretize(data, toFile)
 
 def discretize(data_frame, toFile):
@@ -103,6 +94,9 @@ def discretize(data_frame, toFile):
     # Rest of the fields have already been handled for and seem fine. All of these have 
     # a range 0-10 (except interest corr) so check max and min
 
+    """ 
+    NOTE: SINCE ITS NOT ASKED TO PERFORM THIS STEP, NOT DOING IT AS IT ONLY REDUCES PERFORMANCE
+    
     improper_data_list = []
 
     for col in otherCols[:-1]:
@@ -127,6 +121,8 @@ def discretize(data_frame, toFile):
         col = otherCols[i]
         # for every row where data_frame[col]>10
         data_frame.loc[data_frame[col]>10, col] = 10
+        
+    """
 
     discrete_cols = ['gender', 'race', 'race_o', 'samerace', 'field', 'decision'] 
     attributes = ['pref_o_attractive','pref_o_sincere','pref_o_intelligence','pref_o_funny','pref_o_ambitious',
@@ -136,27 +132,9 @@ def discretize(data_frame, toFile):
     for col in data_frame:
         if col not in discrete_cols:
             # Hasn't already been binned
-
-            if col in attributes:
-                bin_range = numpy.arange(0,1.001,float(1)/bins)
-            elif col in ['age', 'age_o']:
-                bin_range = numpy.arange(18,58.001,float(58-18)/bins)
-            elif col == 'interests_correlate':
-                # if instead -1.001 we would get the answers as [18, 713, 2498, 2883, 632]
-                # Based on this assumption, the values would change
-                bin_range = numpy.arange(-1.000,1.001,float(2)/bins)
-            else:
-                bin_range = numpy.arange(0,10.01,float(10)/bins) 
-                # 5 bins for all other kinds which are 
-                #in the 0-10 range - basically otherCols
-            
-            # Using pd.cut as cut splits as equal width bins opposed to qcut which is equal frequency bins
-            data_frame[col] = pd.cut(data_frame[col], bin_range, labels = numpy.arange(bins), 
+            data_frame[col] = pd.cut(data_frame[col], bins, labels = [0,1], 
             include_lowest = True, retbins = False)
-            
-            # Final list is sorted by default but pdf shows like:[] is not sorted in 
-            # terms of frequencies, hence not sorting
-            # print("%s:"%col, data_frame[col].value_counts(sort=False).to_list())
+
     test_data = data_frame.sample(frac=0.2, random_state = 47)
     train_data = data_frame.drop(test_data.index)
     train_data.to_csv('trainingSet.csv', index = False, mode = 'w')

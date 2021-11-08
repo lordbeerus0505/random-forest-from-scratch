@@ -47,6 +47,7 @@ def calculateGiniGain(attribute, train_data):
 
 
 def bestAttribute(train_data):
+    # Last column is decision and we dont want to test for that.
     attributes = train_data.columns[:-1]
     
     # find entropy and gain as per gini index for each attribute in attribute
