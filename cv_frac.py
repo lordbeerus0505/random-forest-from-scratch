@@ -12,9 +12,9 @@ def plot(fraction_list, accuracy, standard_error):
     fig = plt.figure()
     fig.set_figwidth(8)
     fig.set_figheight(7)
-    plt.errorbar(fraction_list, accuracy[0], yerr=standard_error[0], color='red')
-    plt.errorbar(fraction_list, accuracy[1], yerr=standard_error[1], color='blue')
-    plt.errorbar(fraction_list, accuracy[2], yerr=standard_error[2], color='green')
+    plt.errorbar(fraction_list, accuracy[0], yerr=standard_error[0], fmt='-', color='red', capsize=4, capthick=2)
+    plt.errorbar(fraction_list, accuracy[1], yerr=standard_error[1], fmt='-', color='blue', capsize=4, capthick=2)
+    plt.errorbar(fraction_list, accuracy[2], yerr=standard_error[2], fmt='-', color='green', capsize=4, capthick=2)
     # fig.subplots_adjust(bottom=0.3)
     # plt.xticks([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     # plt.yticks(np.arange(0.5,0.8,0.05))
@@ -46,6 +46,8 @@ def fracPerformance():
 
     accuracy = [[] for _ in range(3)]
     standard_error = [[] for _ in range(3)]
+    t_stat_accuracy_DT = []
+    t_stat_accuracy_RF = []
     for frac in fraction_list:
         accuracyDT, accuracyBT, accuracyRF = [], [], []
         for i in range(10):
@@ -56,25 +58,24 @@ def fracPerformance():
 
             # Finding accuracy for decision tree
             trainAccDT, testAccDT = trees.decisionTree(train_set, test_set, max_depth = 8)
-            print(trainAccDT, testAccDT)
             accuracyDT.append(testAccDT)
 
             trainAccBT, testAccBT = trees.bagging(train_set, test_set, max_depth = 8, num_trees = 30)
-            print(trainAccBT, testAccBT)
             accuracyBT.append(testAccBT)
 
             trainAccRF, testAccRF = trees.randomForests(train_set, test_set, max_depth = 8, num_trees = 30)
-            print(trainAccRF, testAccRF)
             accuracyRF.append(testAccRF)
+            print('For Decision Trees Train Acc %s Test Acc %s \nFor Bagged Trees Train Acc %s Test Acc %s \nFor Random Forests Train Acc %s Test Acc %s \n'%(trainAccDT, testAccDT, trainAccBT, testAccBT, trainAccRF, testAccRF))
 
-        # import pdb; pdb.set_trace()
         # For each depth this is what you store
         accuracy[0].append(np.mean(accuracyDT))
         accuracy[1].append(np.mean(accuracyBT))
         accuracy[2].append(np.mean(accuracyRF))
-        standard_error[0].append(np.std(accuracy[0])/sqrt(10))
-        standard_error[1].append(np.std(accuracy[1])/sqrt(10))
-        standard_error[2].append(np.std(accuracy[2])/sqrt(10))
+        standard_error[0].append(np.std(accuracyDT)/sqrt(10))
+        standard_error[1].append(np.std(accuracyBT)/sqrt(10))
+        standard_error[2].append(np.std(accuracyRF)/sqrt(10))
+        t_stat_accuracy_DT.append(accuracyDT)
+        t_stat_accuracy_RF.append(accuracyRF)
 
     # Plot the graphs
     plot(fraction_list, accuracy, standard_error)
@@ -83,8 +84,10 @@ def fracPerformance():
         print("Null Hypothesis h0: Decision Tree Accuracy = Random Forest Accuracy")
         print("Alternate Hypothesis h1: Decision Tree Accuracy != Random Forest Accuracy")
         print('Running with a fraction of %s'%frac)
+        print("Decision Tree accuracies: %s"%t_stat_accuracy_DT[i])
+        print("Random Forests accuracies: %s"%t_stat_accuracy_RF[i])
         
-        pvalue = ttest_rel(accuracy[0][i], accuracy[1][i]).pvalue
+        pvalue = ttest_rel(t_stat_accuracy_DT[i], t_stat_accuracy_RF[i]).pvalue
         if pvalue < 0.05:
             print ("\nRejecting Null Hypothesis H0 since the pvalue is less than 0.05")
         else:

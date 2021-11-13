@@ -202,14 +202,7 @@ def decisionTree(train_data, test_data, max_depth = 8):
 
 
 def treeMain(trainSetFile, testSetFile, operation):
-    train_data = pd.read_csv(trainSetFile)
-    ###################
-    # import pdb; pdb.set_trace()
-    # train_data = train_data.sample(frac= 1, random_state = 18)
-    # train_data = train_data.head(100)
-    # train_data = train_data[['gender', 'importance_same_religion', 'samerace', 'importance_same_race', 'decision']]
-    ########################
-   
+    train_data = pd.read_csv(trainSetFile) 
     test_data = pd.read_csv(testSetFile)
     if operation == str(1):
         train_acc, test_acc = decisionTree(train_data, test_data, max_depth = 8)
