@@ -5,6 +5,7 @@ from math import sqrt
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from scipy.stats import ttest_rel
+import time
 
 def plot(fraction_list, accuracy, standard_error):
     # import pdb; pdb.set_trace()
@@ -28,6 +29,7 @@ def plot(fraction_list, accuracy, standard_error):
     # plt.show()
 
 def fracPerformance():
+    start = time.time()
     train_data = pd.read_csv("trainingSet.csv")
     test_data = pd.read_csv("testSet.csv")
 
@@ -65,7 +67,7 @@ def fracPerformance():
 
             trainAccRF, testAccRF = trees.randomForests(train_set, test_set, max_depth = 8, num_trees = 30)
             accuracyRF.append(testAccRF)
-            print('For Decision Trees Train Acc %s Test Acc %s \nFor Bagged Trees Train Acc %s Test Acc %s \nFor Random Forests Train Acc %s Test Acc %s \n'%(trainAccDT, testAccDT, trainAccBT, testAccBT, trainAccRF, testAccRF))
+            print('Fraction: %s\nFor Decision Trees Train Acc %s Test Acc %s \nFor Bagged Trees Train Acc %s Test Acc %s \nFor Random Forests Train Acc %s Test Acc %s \n'%(frac, trainAccDT, testAccDT, trainAccBT, testAccBT, trainAccRF, testAccRF))
 
         # For each depth this is what you store
         accuracy[0].append(np.mean(accuracyDT))
@@ -92,6 +94,7 @@ def fracPerformance():
             print ("\nRejecting Null Hypothesis H0 since the pvalue is less than 0.05")
         else:
             print ("\nAccepting Null Hypothesis H0 since pvalue is greater than 0.05")
-
+    end = time.time()
+    print('Total time: ',end-start)
 if __name__ == '__main__':
     fracPerformance()

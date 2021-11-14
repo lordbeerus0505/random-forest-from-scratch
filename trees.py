@@ -5,6 +5,8 @@ import copy
 import math
 import random
 import pprint
+from multiprocessing import Pool
+import time
 
 def findDistribution(train_data):
     pos_count, neg_count = 0,0
@@ -127,17 +129,47 @@ def predict(data_frame, decision_tree):
     # print(result)
     return np.array(result)
 
+def buildBaggedTreeSubProcess(chunk_set):
+    bagged_trees = []
+    train_data, max_depth, random_forest = chunk_set[0], chunk_set[1], chunk_set[2]
+    decision_tree = buildTree(train_data.copy(), max_depth, 0, random_forest)
+    bagged_trees.append(decision_tree)
+
+    return bagged_trees
+
+def buildBaggedTreeMultiProcess(train_data, max_depth, num_trees, random_forest = False):
+    start = time.time()
+    bagged_trees = []
+    pool = Pool(processes=5)
+    for i in range(num_trees//5):
+        chunk_set = []
+        for j in range(5):
+            # Using seed value for consistent output
+            new_train_data = train_data.sample(frac=1, random_state = 5*i+j, replace=True)
+            chunk_set.append([new_train_data.copy(), max_depth, random_forest])
+        
+        result = pool.map(buildBaggedTreeSubProcess, chunk_set)
+        for j in range(5):
+            bagged_trees.append(result[j][0])
+    pool.close()
+    end = time.time()
+    # print(end-start)
+    return bagged_trees
+
 def buildBaggedTree(train_data, max_depth, num_trees, random_forest = False):
+    start = time.time()
     bagged_trees = []
     for i in range(num_trees):
         # Using seed value for consistent output
         new_train_data = train_data.sample(frac=1, random_state = 5*i, replace=True)
         decision_tree = buildTree(new_train_data.copy(), max_depth, 0, random_forest)
         bagged_trees.append(decision_tree)
+    end = time.time()
+    # print(end-start)
     return bagged_trees
 
 def randomForests(train_data, test_data, max_depth = 8, num_trees = 30):
-    random_forest = buildBaggedTree(train_data, max_depth, num_trees, random_forest = True)
+    random_forest = buildBaggedTreeMultiProcess(train_data, max_depth, num_trees, random_forest = True)
 
     # now predict on each of these bagged trees and find the average prediction (can use majority also).
     resultArr = []
@@ -161,7 +193,7 @@ def randomForests(train_data, test_data, max_depth = 8, num_trees = 30):
     return calculateAccuracy(normalized_result_train, train_data['decision']), calculateAccuracy(normalized_result_test, test_data['decision'])
 
 def bagging(train_data, test_data, max_depth = 8, num_trees = 30):
-    bagged_trees = buildBaggedTree(train_data, max_depth, num_trees, random_forest = False)
+    bagged_trees = buildBaggedTreeMultiProcess(train_data, max_depth, num_trees, random_forest = False)
 
     # now predict on each of these bagged trees and find the average prediction (can use majority also).
     resultArr = []

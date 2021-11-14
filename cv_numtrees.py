@@ -17,7 +17,7 @@ def plot(num_trees_list, accuracy, standard_error):
     # fig.subplots_adjust(bottom=0.3)
     # plt.xticks([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     # plt.yticks(np.arange(0.5,0.8,0.05))
-    plt.xlabel('Depth of Tree')
+    plt.xlabel('Number of Trees')
     plt.ylabel('Avg. Model Accuracy')
     red_patch = mpatches.Patch(color='red', label='Bagged Tree')
     blue_patch = mpatches.Patch(color='blue', label='Random Forest')
@@ -40,14 +40,14 @@ def numTreesPerformance():
         train_data_split.append(train_data.iloc[size*i:size*(i+1)])
 
     # possible tree sizes are 10, 20, 40, 50
-    num_trees_list = [10,20]
+    num_trees_list = [10,20,40,50]
 
     accuracy = [[] for _ in range(2)]
     standard_error = [[] for _ in range(2)]
     t_stat_accuracy_BT = []
     t_stat_accuracy_RF = []
     for num in num_trees_list:
-        accuracyDT, accuracyBT, accuracyRF = [], [], []
+        accuracyBT, accuracyRF = [], []
         for i in range(10):
             test_set = train_data_split[i]
             train_set = train_data.drop(test_set.index)
@@ -58,7 +58,7 @@ def numTreesPerformance():
             trainAccRF, testAccRF = trees.randomForests(train_set, test_set, max_depth = 8, num_trees = num)
             accuracyRF.append(testAccRF)
             
-            print('For Bagged Trees Train Acc %s Test Acc %s \nFor Random Forests Train Acc %s Test Acc %s \n'%(trainAccBT, testAccBT, trainAccRF, testAccRF))
+            print('Num Trees: %s\n For Bagged Trees Train Acc %s Test Acc %s \nFor Random Forests Train Acc %s Test Acc %s \n'%(num, trainAccBT, testAccBT, trainAccRF, testAccRF))
         # import pdb; pdb.set_trace()
         # For each depth this is what you store
         accuracy[0].append(np.mean(accuracyBT))

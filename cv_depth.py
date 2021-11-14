@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from scipy.stats import ttest_rel
 
+# For multiprocessing
+import time
+# from multiprocessing import Pool
+
 def plot(depth_list, accuracy, standard_error):
 
     fig = plt.figure()
@@ -24,7 +28,30 @@ def plot(depth_list, accuracy, standard_error):
     plt.savefig('learningCurves_depth.png')
     # plt.show()
 
+def produceResult(chunk_set):
+
+    depth, train_data, train_data_split = chunk_set[0], chunk_set[1], chunk_set[2]
+    accuracyDT, accuracyBT, accuracyRF = [], [], []
+    print(depth)
+    for i in range(10):
+        test_set = train_data_split[i]
+        train_set = train_data.drop(test_set.index)
+
+        # Finding accuracy for decision tree
+        trainAccDT, testAccDT = trees.decisionTree(train_set, test_set, max_depth = depth)
+        accuracyDT.append(testAccDT)
+
+        trainAccBT, testAccBT = trees.bagging(train_set, test_set, max_depth = depth, num_trees = 30)
+        accuracyBT.append(testAccBT)
+
+        trainAccRF, testAccRF = trees.randomForests(train_set, test_set, max_depth = depth, num_trees = 30)
+        accuracyRF.append(testAccRF)
+
+        print('Depth: %s\n For Decision Trees Train Acc %s Test Acc %s \nFor Bagged Trees Train Acc %s Test Acc %s \nFor Random Forests Train Acc %s Test Acc %s \n'%(depth, trainAccDT, testAccDT, trainAccBT, testAccBT, trainAccRF, testAccRF))
+    return accuracyDT, accuracyBT, accuracyRF 
+
 def depthPerformance():
+    start = time.time()
     train_data = pd.read_csv("trainingSet.csv")
     test_data = pd.read_csv("testSet.csv")
 
@@ -45,9 +72,10 @@ def depthPerformance():
     standard_error = [[] for _ in range(3)]
     t_stat_accuracy_DT = []
     t_stat_accuracy_RF = []
+    
     for depth in depth_list:
         accuracyDT, accuracyBT, accuracyRF = [], [], []
-        for i in range(2):
+        for i in range(10):
             test_set = train_data_split[i]
             train_set = train_data.drop(test_set.index)
 
@@ -62,6 +90,7 @@ def depthPerformance():
             accuracyRF.append(testAccRF)
 
             print('For Decision Trees Train Acc %s Test Acc %s \nFor Bagged Trees Train Acc %s Test Acc %s \nFor Random Forests Train Acc %s Test Acc %s \n'%(trainAccDT, testAccDT, trainAccBT, testAccBT, trainAccRF, testAccRF))
+        
         # For each depth this is what you store
         accuracy[0].append(np.mean(accuracyDT))
         accuracy[1].append(np.mean(accuracyBT))
@@ -85,6 +114,9 @@ def depthPerformance():
             print ("\nRejecting Null Hypothesis H0 since the pvalue is less than 0.05\n")
         else:
             print ("\nAccepting Null Hypothesis H0 since pvalue is greater than 0.05\n")
+    
+    end = time.time()
+    print('Total time:',end - start)
 
 if __name__ == '__main__':
     depthPerformance()
