@@ -213,7 +213,7 @@ def treeMain(trainSetFile, testSetFile, operation):
         print('Training Accuracy BT: %.2f'%train_acc)
         print('Test Accuracy BT: %.2f'%test_acc)
     else:
-        train_acc, test_acc = randomForests(train_data, test_data)
+        train_acc, test_acc = randomForests(train_data, test_data, max_depth = 8, num_trees = 30)
         print('Training Accuracy RF: %.2f'%train_acc)
         print('Test Accuracy RF: %.2f'%test_acc)
 
