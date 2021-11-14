@@ -64,7 +64,7 @@ def bestAttribute(train_data, random_forest = False):
     for attr in attributes:
         loss = calculateGiniGain(attr, train_data)
         
-        if minReduction > loss:
+        if minReduction >= loss:
             bestAttr = attr
             minReduction = loss
 
@@ -210,12 +210,12 @@ def treeMain(trainSetFile, testSetFile, operation):
         print('Test Accuracy DT: %.2f'%test_acc)
     elif operation == str(2):
         train_acc, test_acc = bagging(train_data, test_data, max_depth = 8, num_trees = 30)
-        print('Training Accuracy DT: %.2f'%train_acc)
-        print('Test Accuracy DT: %.2f'%test_acc)
+        print('Training Accuracy BT: %.2f'%train_acc)
+        print('Test Accuracy BT: %.2f'%test_acc)
     else:
         train_acc, test_acc = randomForests(train_data, test_data)
-        print('Training Accuracy DT: %.2f'%train_acc)
-        print('Test Accuracy DT: %.2f'%test_acc)
+        print('Training Accuracy RF: %.2f'%train_acc)
+        print('Test Accuracy RF: %.2f'%test_acc)
 
 if __name__ == '__main__':
     # input are trainingSet, testSet and choice
